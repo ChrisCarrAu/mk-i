@@ -106,6 +106,11 @@ class Robot:
     for _, leg in self.Legs.items():
       leg.Relax()
 
+# Servo definitions provide the following information for each servo:
+# - the actual servo (from kit.servo list)
+# - the range of motion of the servo mounted in the robot (min and max)
+# - the direction that the servo moves, left and right are opposites
+# - a bitwise anded list describing the servo and its location
 servos = [
   # FORELEG
   RobotServo(kit.servo[4], 0, 180, 1, LEFT | AFT | LOWER),  # LR   (fwd/back)
