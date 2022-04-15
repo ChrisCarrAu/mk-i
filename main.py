@@ -13,7 +13,6 @@ kit = ServoKit(channels = 16)
 
 class Leg:
   def __init__(self, servos):
-
     self.ForelegServo = next(filter(lambda servo: servo.Position & LOWER, servos), None)
     self.ThighServo = next(filter(lambda servo: servo.Position & UPPER, servos), None)
     self.ShoulderServo = next(filter(lambda servo: servo.Position & SHOULDER, servos), None)
