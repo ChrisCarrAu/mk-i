@@ -40,7 +40,7 @@ class Leg:
   def Lower(self):
     self.ForelegServo.SetValue(1)
     self.ThighServo.SetValue(1)
-    self.ShoulderServo.SetValue(0)    
+    self.ShoulderServo.SetValue(0)
 
 class FrontLeg(Leg):
   def Salute(self):
@@ -48,11 +48,25 @@ class FrontLeg(Leg):
     self.ThighServo.SetValue(1)
     self.ShoulderServo.SetValue(1)
 
+  def Step(self):
+    self.Lift()
+    time.sleep(0.2)
+    self.Extend()
+    time.sleep(0.2)
+    self.Lower()
+
 class RearLeg(Leg):
   def Lower(self):
     self.ForelegServo.SetValue(0)
     self.ThighServo.SetValue(1)
     self.ShoulderServo.SetValue(0)
+
+  def Step(self):
+    self.Lift()
+    time.sleep(0.2)
+    self.Extend()
+    time.sleep(0.2)
+    self.Lower()
 
 class RobotServo:
   def __init__(self, servo, min, max, direction, position):
@@ -82,10 +96,12 @@ class Robot:
       "RR": RearLeg([servo for servo in servos if (servo.Position & RIGHT) and (servo.Position & AFT)]),
     }
 
+  # Set legs straight with shoulders vertical - standing on tip-toes
   def Default(self):
     for _, leg in self.Legs.items(): 
       leg.Default()
 
+  # Turn off power to all servos
   def Relax(self):
     for _, leg in self.Legs.items():
       leg.Relax()
@@ -110,30 +126,29 @@ servos = [
 
 robot = Robot(servos)
 
-robot.Default()
-time.sleep(.5)
-robot.Legs["LF"].Salute()
-robot.Legs["RF"].Salute()
-time.sleep(.5)
-robot.Default()
-time.sleep(.5)
-robot.Legs["LF"].Salute()
-time.sleep(.5)
-robot.Legs["RF"].Salute()
-time.sleep(.5)
-robot.Default()
+# robot.Default()
+# time.sleep(.5)
+# robot.Legs["LF"].Salute()
+# robot.Legs["RF"].Salute()
+# time.sleep(.5)
+# robot.Default()
+# time.sleep(.5)
+# robot.Legs["LF"].Salute()
+# time.sleep(.5)
+# robot.Legs["RF"].Salute()
+# time.sleep(.5)
+# robot.Default()
 
-time.sleep(.5)
-robot.Legs["LR"].Lower()
-robot.Legs["RR"].Lower()
+# time.sleep(.5)
+# robot.Legs["LR"].Lower()
+# robot.Legs["RR"].Lower()
 
-robot.Default()
-time.sleep(.5)
-robot.Legs["LF"].Lift()
-time.sleep(.5)
-robot.Legs["LF"].Extend()
-time.sleep(.5)
-robot.Legs["LF"].Lower()
+# robot.Default()
+# time.sleep(.5)
+robot.Legs["LR"].Step()
+robot.Legs["LF"].Step()
+robot.Legs["RR"].Step()
+robot.Legs["RF"].Step()
 
 time.sleep(.5)
 robot.Relax()
