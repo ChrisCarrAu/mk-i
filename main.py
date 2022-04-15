@@ -13,9 +13,14 @@ kit = ServoKit(channels = 16)
 
 class Leg:
   def __init__(self, servos):
+    self.Servos = servos
     self.ForelegServo = next(filter(lambda servo: servo.Position & LOWER, servos), None)
     self.ThighServo = next(filter(lambda servo: servo.Position & UPPER, servos), None)
     self.ShoulderServo = next(filter(lambda servo: servo.Position & SHOULDER, servos), None)
+
+  def Relax(self):
+    for servo in self.Servos:
+      servo.Relax()
 
   def Default(self):
     self.ForelegServo.SetValue(.5)
@@ -65,8 +70,8 @@ class RobotServo:
     else:
       self.servo.angle = (self.max - self.min) * (1 - value) + self.min
 
-  def Flop(self):
-    self.Servo.angle = None
+  def Relax(self):
+    self.servo.angle = None
 
 class Robot:
   def __init__(self, servos):
@@ -76,6 +81,14 @@ class Robot:
       "LR": RearLeg([servo for servo in servos if (servo.Position & LEFT) and (servo.Position & AFT)]),
       "RR": RearLeg([servo for servo in servos if (servo.Position & RIGHT) and (servo.Position & AFT)]),
     }
+
+  def Default(self):
+    for _, leg in self.Legs.items(): 
+      leg.Default()
+
+  def Relax(self):
+    for _, leg in self.Legs.items():
+      leg.Relax()
 
 servos = [
   # FORELEG
@@ -97,29 +110,24 @@ servos = [
 
 robot = Robot(servos)
 
-# legs["LF"].Default()
-# legs["RF"].Default()
-# legs["LR"].Default()
-# legs["RR"].Default()
-# time.sleep(.5)
-# legs["LF"].Salute()
-# legs["RF"].Salute()
-# time.sleep(.5)
-# legs["LF"].Default()
-# legs["RF"].Default()
-# time.sleep(.5)
-# legs["LF"].Salute()
-# time.sleep(.5)
-# legs["RF"].Salute()
-# time.sleep(.5)
-# legs["LF"].Default()
-# legs["RF"].Default()
+robot.Default()
+time.sleep(.5)
+robot.Legs["LF"].Salute()
+robot.Legs["RF"].Salute()
+time.sleep(.5)
+robot.Default()
+time.sleep(.5)
+robot.Legs["LF"].Salute()
+time.sleep(.5)
+robot.Legs["RF"].Salute()
+time.sleep(.5)
+robot.Default()
 
-# time.sleep(.5)
-# legs["LR"].Lower()
-# legs["RR"].Lower()
+time.sleep(.5)
+robot.Legs["LR"].Lower()
+robot.Legs["RR"].Lower()
 
-robot.Legs["LF"].Default()
+robot.Default()
 time.sleep(.5)
 robot.Legs["LF"].Lift()
 time.sleep(.5)
@@ -127,4 +135,5 @@ robot.Legs["LF"].Extend()
 time.sleep(.5)
 robot.Legs["LF"].Lower()
 
-
+time.sleep(.5)
+robot.Relax()
