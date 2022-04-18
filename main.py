@@ -89,34 +89,20 @@ class Leg:
 
     def Default(self):
         self.IK(0, ARM_A, -50)
-        # self.ForelegServo.SetPosition(.5)
-        # self.ThighServo.SetPosition(.5)
-        # self.ShoulderServo.SetPosition(0)
 
     def Lift(self):
         self.IK(0, ARM_A, -40, 100)
-        # self.ForelegServo.SetPosition(0.5)
-        # self.ThighServo.SetPosition(0)
-        # self.ShoulderServo.SetPosition(0)
 
     def Extend(self):
         self.IK(20, ARM_A, -40, 100)
-        # self.ForelegServo.SetPosition(.75)
-        # self.ThighServo.SetPosition(0.5)
-        # self.ShoulderServo.SetPosition(0)
 
     def Lower(self):
         self.IK(20, ARM_A, -50, 100)
-        # self.ForelegServo.SetPosition(1)
-        # self.ThighServo.SetPosition(1)
-        # self.ShoulderServo.SetPosition(0)
 
 
 class FrontLeg(Leg):
-    # def Salute(self):
-    #     self.ForelegServo.SetPosition(1)
-    #     self.ThighServo.SetPosition(1)
-    #     self.ShoulderServo.SetPosition(1)
+    def Salute(self):
+        self.IK(20, 0, 20, 10)
 
     # Set the upper leg offset angle to 0.6 * 180 degrees (to compensate for diagonally positioned leg position)
     def UpperLegOffsetAngle(self):
@@ -124,23 +110,17 @@ class FrontLeg(Leg):
 
     def Step(self):
         self.Lift()
-        time.sleep(0.2)
         self.Extend()
-        time.sleep(0.2)
         self.Lower()
 
 
 class RearLeg(Leg):
     # def Lower(self):
-    #     self.ForelegServo.SetPosition(0)
-    #     self.ThighServo.SetPosition(1)
-    #     self.ShoulderServo.SetPosition(0)
+    #     self.IK(0, ARM_A, -20, 10)
 
     def Step(self):
         self.Lift()
-        time.sleep(0.2)
         self.Extend()
-        time.sleep(0.2)
         self.Lower()
 
 
