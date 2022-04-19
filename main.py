@@ -56,16 +56,16 @@ class Leg:
         phi_1 = arccos((ARM_C**2 - ARM_B**2 - radius**2) /
                        (-2 * ARM_B * radius))
         phi_2 = arctan2(z, x)
-        theta_1 = rad2deg(phi_2-phi_1)  # eqn 4 converted to degrees
+        theta_1 = rad2deg(phi_2-phi_1) + self.UpperLegOffsetAngle()  # eqn 4 converted to degrees
 
         phi_3 = arccos((radius**2 - ARM_B**2 - ARM_C**2) /
                        (-2 * ARM_B * ARM_C))
-        theta_2 = 180 - rad2deg(phi_3)
+        theta_2 = rad2deg(phi_3)
 
         # Convert degrees into servo location (0 .. 1)
         # will always be -ve, but transforms to +ve
-        servo_angle_thigh = 1.0 + theta_1 / 180.0 + self.UpperLegOffsetAngle()
-        servo_angle_foreleg = theta_2 / 180.0
+        servo_angle_thigh = (theta_1 + 180) / 180.0     # Thigh is 180 because horizontal plane
+        servo_angle_foreleg = (theta_2 + 90) / 180.0    # Foreleg is 90 because already vertical plane
 
         # Get the current position of the servos to move and the iteration value 
         # per interval to move within the time specified
@@ -88,16 +88,16 @@ class Leg:
             servo.Relax()
 
     def Default(self):
-        self.IK(0, ARM_A, -50)
+        self.IK(0, ARM_A, -60)
 
     def Lift(self):
-        self.IK(0, ARM_A, -40, 100)
+        self.IK(0, ARM_A, -50, 200)
 
     def Extend(self):
-        self.IK(20, ARM_A, -40, 100)
+        self.IK(30, ARM_A, -50, 200)
 
     def Lower(self):
-        self.IK(20, ARM_A, -50, 100)
+        self.IK(30, ARM_A, -60, 200)
 
 
 class FrontLeg(Leg):
@@ -106,7 +106,7 @@ class FrontLeg(Leg):
 
     # Set the upper leg offset angle to 0.6 * 180 degrees (to compensate for diagonally positioned leg position)
     def UpperLegOffsetAngle(self):
-        return 0.6
+        return 45
 
     def Step(self):
         self.Lift()
@@ -225,11 +225,12 @@ robot = Robot(servos)
 # robot.Legs["RR"].Lower()
 
 robot.Default()
-# time.sleep(.5)
-robot.Legs["LR"].Step()
-robot.Legs["LF"].Step()
-robot.Legs["RR"].Step()
-robot.Legs["RF"].Step()
+time.sleep(1)
+for i in range(5):
+    robot.Legs["RF"].Step()
+    robot.Legs["LR"].Step()
+    robot.Legs["LF"].Step()
+    robot.Legs["RR"].Step()
 
 time.sleep(.5)
 robot.Relax()
