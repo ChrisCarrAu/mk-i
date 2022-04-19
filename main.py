@@ -83,9 +83,29 @@ class Leg:
             # Pause for one tenth of the required time.
             time.sleep(t / 10.0 / 1000)
 
-    def Relax(self):
+    def SetServoPosition(self, shoulder, upper, lower, t=0):
+        s0pos = self.ShoulderServo.GetPosition()
+        if s0pos == -1: s0pos = upper
+        s1pos = self.ThighServo.GetPosition()
+        if s1pos == -1: s1pos = upper
+        s2pos = self.ForelegServo.GetPosition()
+        if s2pos == -1: s2pos = lower
+
+        rnge = max(10, t / 50)
+
+        s0iter = (shoulder - s0pos) / rnge
+        s1iter = (upper - s1pos) / rnge
+        s2iter = (lower - s2pos) / rnge
+
+        for i in range(int(rnge)):
+            self.ShoulderServo.SetPosition(s0pos + s0iter * rnge)
+            self.ThighServo.SetPosition(s1pos + s1iter * rnge)
+            self.ForelegServo.SetPosition(s2pos + s2iter * rnge)
+            time.sleep(t / rnge / 1000.0)
+
+    def PowerDown(self):
         for servo in self.Servos:
-            servo.Relax()
+            servo.PowerDown()
 
     def Default(self):
         self.IK(0, ARM_A, -60)
@@ -147,7 +167,7 @@ class RobotServo:
     def GetPosition(self):
         return self.Position
 
-    def Relax(self):
+    def PowerDown(self):
         self.servo.angle = None
 
 
@@ -166,9 +186,9 @@ class Robot:
             leg.Default()
 
     # Turn off power to all servos
-    def Relax(self):
+    def PowerDown(self):
         for _, leg in self.Legs.items():
-            leg.Relax()
+            leg.PowerDown()
 
 
 # Servo definitions provide the following information for each servo:
@@ -179,30 +199,19 @@ class Robot:
 servos = [
     # FORELEG
     RobotServo(kit.servo[4], 0, 180, 1, LEFT | AFT | LOWER),  # LR   (fwd/back)
-    RobotServo(kit.servo[5], 0, 180, -1, RIGHT |
-               FORE | LOWER),  # RF   (back/fwd)
-    RobotServo(kit.servo[6], 0, 170, -1, RIGHT |
-               AFT | LOWER),  # RR   (back/fwd)
-    RobotServo(kit.servo[7], 0, 180, 1, LEFT |
-               FORE | LOWER),  # LF   (fwd/back)
+    RobotServo(kit.servo[5], 0, 180, -1, RIGHT | FORE | LOWER),  # RF   (back/fwd)
+    RobotServo(kit.servo[6], 0, 170, -1, RIGHT | AFT | LOWER),  # RR   (back/fwd)
+    RobotServo(kit.servo[7], 0, 180, 1, LEFT | FORE | LOWER),  # LF   (fwd/back)
     # THIGH
-    RobotServo(kit.servo[8], 0, 140, -1, RIGHT |
-               AFT | UPPER),   # RR   (back/fwd)
-    RobotServo(kit.servo[9], 50, 180, -1, RIGHT |
-               FORE | UPPER),  # RF   (back/fwd)
-    RobotServo(kit.servo[10], 20, 180, 1, LEFT |
-               AFT | UPPER),  # LR   (fwd/back)
-    RobotServo(kit.servo[11], 0, 110, 1, LEFT |
-               FORE | UPPER),  # LF   (fwd/back)
+    RobotServo(kit.servo[8], 0, 160, -1, RIGHT | AFT | UPPER),   # RR   (back/fwd)
+    RobotServo(kit.servo[9], 20, 180, -1, RIGHT | FORE | UPPER),  # RF   (back/fwd)
+    RobotServo(kit.servo[10], 20, 180, 1, LEFT | AFT | UPPER),  # LR   (fwd/back)
+    RobotServo(kit.servo[11], 0, 160, 1, LEFT | FORE | UPPER),  # LF   (fwd/back)
     # SHOULDER
-    RobotServo(kit.servo[12], 50, 160, 1, RIGHT |
-               AFT | SHOULDER),   # RR     (down/up)
-    RobotServo(kit.servo[13], 50, 140, -1, RIGHT |
-               FORE | SHOULDER),  # RF     (up/down)
-    RobotServo(kit.servo[14], 15, 105, -1, LEFT |
-               AFT | SHOULDER),  # LR     (up/down)
-    RobotServo(kit.servo[15], 45, 125, 1, LEFT |
-               FORE | SHOULDER),   # LF     (down/up)
+    RobotServo(kit.servo[12], 50, 160, 1, RIGHT | AFT | SHOULDER),   # RR     (down/up)
+    RobotServo(kit.servo[13], 50, 140, -1, RIGHT | FORE | SHOULDER),  # RF     (up/down)
+    RobotServo(kit.servo[14], 15, 105, -1, LEFT | AFT | SHOULDER),  # LR     (up/down)
+    RobotServo(kit.servo[15], 45, 125, 1, LEFT | FORE | SHOULDER),   # LF     (down/up)
 ]
 
 robot = Robot(servos)
@@ -224,13 +233,41 @@ robot = Robot(servos)
 # robot.Legs["LR"].Lower()
 # robot.Legs["RR"].Lower()
 
-robot.Default()
-time.sleep(1)
-for i in range(5):
-    robot.Legs["RF"].Step()
-    robot.Legs["LR"].Step()
-    robot.Legs["LF"].Step()
-    robot.Legs["RR"].Step()
+try:
+    robot.Default()
+    time.sleep(1)
 
-time.sleep(.5)
-robot.Relax()
+    # TESTNG LEG MOVEMENT LIMITS (DEBUG)
+    robot.Legs["LF"].SetServoPosition(0, 0, 0.5)
+    robot.Legs["RF"].SetServoPosition(0, 0, 0.5)
+
+    for i in range(0, 11, 2):
+        robot.Legs["LR"].SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+        robot.Legs["RR"].SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+
+    for i in range(0, 11, 2):
+        robot.Legs["LF"].SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+        robot.Legs["RF"].SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+
+    # Walking
+    robot.Default()
+    for i in range(5):
+        robot.Legs["RF"].Step()
+        robot.Legs["LR"].Step()
+        robot.Legs["LF"].Step()
+        robot.Legs["RR"].Step()
+
+    # And salute
+    robot.Legs["RF"].SetServoPosition(1, 0, 0, 400)
+    robot.Legs["RF"].SetServoPosition(0, 1, 0.5, 100)
+
+    time.sleep(.5)
+    robot.PowerDown()
+
+except:
+    # On failure, turn off all power to all servos
+    robot.PowerDown()
