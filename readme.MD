@@ -47,5 +47,9 @@ The dimensions used in this robot are as follows:
  ```
 
  For 2-D motion, the shoulder is assumed to be resting in a horizontal position (0), so we are only interested in the Y and Z axes (+/-43.0, y, z)
- 
+
  Each leg has an independant position - y and z are equivant, however left legs have negative z-axis positioning whereas the right legs have positive z-axis positioning.
+
+# 3-D Inverse Kinematics
+
+This is very similar to the 2-D example above. This robot, in effect, does calculations in two 2-d planes because the shoulder is always at right angles to the leg.
