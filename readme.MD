@@ -32,18 +32,20 @@ The dimensions used in this robot are as follows:
 
 
 ```
-        (Z)   (Y)
-         |    /
-         |   /
-         |  /
-         | /
- (body)  |/ shoulder->
----------*----------- (X)
-        /|
-       / |
-      /  |
-     /   |
-    /    |
+           (Z)   (Y)           (Z)   (Y)
+            |    /              |    /
+            |   /               |   /
+            |  /                |  /
+  left      | /                 | /  right
+<-shoulder  |/      (body)      |/ shoulder->
+-----------(*)-----------------(*)---------- (X)
+           /|                  /|
+          / |                 / |
+         /  |                /  |
+        /   |               /   |
+       /    |              /    |
  ```
 
- For 2-D motion, the should is assumed to be resting in a horizontal position (0), so we are only interested in the Y and Z axes (+/-43.0, y, z)
+ For 2-D motion, the shoulder is assumed to be resting in a horizontal position (0), so we are only interested in the Y and Z axes (+/-43.0, y, z)
+ 
+ Each leg has an independant position - y and z are equivant, however left legs have negative z-axis positioning whereas the right legs have positive z-axis positioning.
