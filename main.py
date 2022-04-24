@@ -162,8 +162,8 @@ class FrontLeg(Leg):
         return 45
 
     def Salute(self):
-        self.IK(50, R_SHOULDER - 40, 63, 400)
-        self.Default()
+        self.IK(50, R_SHOULDER - 50, 40, 400)
+        # self.Default()
 
 
 class RearLeg(Leg):
@@ -277,7 +277,8 @@ try:
 
     # # TESTNG LEG MOVEMENT LIMITS (DEBUG)
     # robot.Legs["LF"].SetServoPosition(0, 0, 0)
-    # robot.Legs["RF"].SetServoPosition(0, 0, 0)
+    # robot.Legs["RF"].SetServoPosition(1, 0, 0)
+    # time.sleep(0.5)
 
     # for i in range(0, 11, 2):
     #     robot.Legs["LR"].SetServoPosition(0, i/10, 0.5)
