@@ -1,0 +1,112 @@
+{
+    "servos": [
+        {
+            "id": 4,
+            "min": 0,
+            "max": 180,
+            "rot": 1,
+            "side": "LEFT",
+            "foreaft": "AFT",
+            "limb": "LOWER"
+        },
+        {
+            "id": 5,
+            "min": 0,
+            "max": 170,
+            "rot": -1,
+            "side": "RIGHT",
+            "foreaft": "FORE",
+            "limb": "LOWER"
+        },
+        {
+            "id": 6,
+            "min": 0,
+            "max": 170,
+            "rot": -1,
+            "side": "RIGHT",
+            "foreaft": "AFT",
+            "limb": "LOWER"
+        },
+        {
+            "id": 7,
+            "min": 0,
+            "max": 180,
+            "rot": 1,
+            "side": "LEFT",
+            "foreaft": "FORE",
+            "limb": "LOWER"
+        },
+        {
+            "id": 8,
+            "min": 0,
+            "max": 160,
+            "rot": -1,
+            "side": "RIGHT",
+            "foreaft": "AFT",
+            "limb": "UPPER"
+        },
+        {
+            "id": 9,
+            "min": 30,
+            "max": 180,
+            "rot": -1,
+            "side": "RIGHT",
+            "foreaft": "FORE",
+            "limb": "UPPER"
+        },
+        {
+            "id": 10,
+            "min": 30,
+            "max": 180,
+            "rot": 1,
+            "side": "LEFT",
+            "foreaft": "AFT",
+            "limb": "UPPER"
+        },
+        {
+            "id": 11,
+            "min": 0,
+            "max": 160,
+            "rot": 1,
+            "side": "LEFT",
+            "foreaft": "FORE",
+            "limb": "UPPER"
+        },
+        {
+            "id": 12,
+            "min": 50,
+            "max": 160,
+            "rot": 1,
+            "side": "RIGHT",
+            "foreaft": "AFT",
+            "limb": "SHOULDER"
+        },
+        {
+            "id": 13,
+            "min": 50,
+            "max": 140,
+            "rot": -1,
+            "side": "RIGHT",
+            "foreaft": "FORE",
+            "limb": "SHOULDER"
+        },
+        {
+            "id": 14,
+            "min": 15,
+            "max": 105,
+            "rot": -1,
+            "side": "LEFT",
+            "foreaft": "AFT",
+            "limb": "SHOULDER"
+        },
+        {
+            "id": 15,
+            "min": 45,
+            "max": 125,
+            "rot": 1,
+            "side": "LEFT",
+            "foreaft": "FORE",
+            "limb": "SHOULDER"
+        }
+    ]
+}

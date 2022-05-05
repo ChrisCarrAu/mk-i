@@ -1,3 +1,4 @@
+import json
 import time
 import traceback
 from adafruit_servokit import ServoKit
@@ -13,8 +14,8 @@ UPPER = 32
 SHOULDER = 64
 
 R_SHOULDER = 43.0   # shoulder width in mm
-R_THIGH = 43.0      # thigh length in mm
-R_FORELEG = 54.8    # foreleg length in mm
+R_THIGH = 44.0      # thigh length in mm
+R_FORELEG = 52.8    # foreleg length in mm
 
 # Orig X, Y plane
 # Me   X, Z plane
@@ -47,40 +48,39 @@ class Leg:
     def UpperLegOffsetAngle(self):
         return 0
 
-    def IK(self, x, y, z, t=0):
-        # x, y, z are expressed in mm - 0, 0, 0 is defiend as where the shoulder joint attaches to the body,
+    def IK(self, x, z, shoulder=90, t=0):
+        # shoulder is the angle of the shoulder (where 90 is horizontal, 0 is vertical)
+        # x, z are expressed in mm - 0, 0 is defined as where the shoulder joint attaches to the rest of the leg,
         # t is the amount of time in milliseconds to take
         # so neutral y position is distance of should servo to upper arm.
         # Sets servo angles in degrees from neutral position
         r_xz = sqrt(x**2 + z**2)                     # radius (x, z)
-        r_total = sqrt(x**2 + y**2 + z**2)           # radius from (0,0,0) - where the shoulder attaches to the body
-        r_leg = sqrt(r_total**2 - R_SHOULDER**2)     # radius from (0,R_SHOULDER,0) - thigh and foreleg
-        if isnan(r_leg): raise RuntimeError(F'Invalid leg position when calculating radii ({x}, {y}, {z})')
+        # r_total = sqrt(x**2 + y**2 + z**2)           # radius from (0,0,0) - where the shoulder attaches to the body
+        # r_leg = sqrt(r_total**2 - R_SHOULDER**2)     # radius from (0,R_SHOULDER,0) - thigh and foreleg
+        # if isnan(r_leg): raise RuntimeError(F'Invalid leg position when calculating radii ({x}, {z})')
 
         # Shoulder angle
-        phi_1 = arccos(R_SHOULDER / r_total)
-        phi_2 = arccos(r_xz / r_total)
-        theta_0 = round(rad2deg(phi_1 + phi_2), 2)
+        # phi_1 = arccos(R_SHOULDER / r_total)
+        # phi_2 = arccos(r_xz / r_total)
+        theta_0 = shoulder  # round(rad2deg(phi_1 + phi_2), 2)
 
         # Thigh angle
-        phi_3 = rad2deg(arccos((R_THIGH**2 + r_leg**2 - R_FORELEG**2) / (2 * R_THIGH * r_leg)))
-        phi_4 = rad2deg(arctan2(x, z))
-        if phi_4 < 0:
-            phi_4 += 180
+        phi_3 = rad2deg(arccos((R_THIGH**2 + r_xz**2 - R_FORELEG**2) / (2 * R_THIGH * r_xz)))
+        phi_4 = rad2deg(arctan2(x, z)) - 90     # Rotate 90 degrees so that 0 degrees is horizontal facing front
         theta_1 = phi_3 + phi_4      # eqn 4 converted to degrees
 
         # Foreleg angle
-        phi_5 = arccos((R_FORELEG**2 + R_THIGH**2 - r_leg**2) / (2 * R_THIGH * R_FORELEG))
+        phi_5 = arccos((R_FORELEG**2 + R_THIGH**2 - r_xz**2) / (2 * R_THIGH * R_FORELEG))
         theta_2 = rad2deg(phi_5)
 
         # Convert degrees into servo location (0 .. 1)
         servo_angle_shoulder = (90 - theta_0) / 90                                # Shoulder starts at 90 degrees rotation
-        servo_angle_thigh = (theta_1 - 90 + self.UpperLegOffsetAngle()) / 180.0   # Thigh is -90 because horizontal plane
-        servo_angle_foreleg = (90 - theta_2) / 180.0                                     # Foreleg is +90 because already vertical plane
+        servo_angle_thigh = (theta_1 + self.UpperLegOffsetAngle()) / 180.0   # Thigh is -90 because horizontal plane
+        servo_angle_foreleg = theta_2 / 180.0                                     # Foreleg is +90 because already vertical plane
 
-        if isnan(servo_angle_shoulder) or servo_angle_shoulder < 0 or servo_angle_shoulder > 1: raise RuntimeError(f'Invalid shoulder position {servo_angle_shoulder} ({x}, {y}, {z})')
-        if isnan(servo_angle_thigh) or servo_angle_thigh < 0 or servo_angle_thigh > 1: raise RuntimeError(f'Invalid thigh position {servo_angle_thigh} ({x}, {y}, {z})')
-        if isnan(servo_angle_foreleg) or servo_angle_foreleg < 0 or servo_angle_foreleg > 1: raise RuntimeError(f'Invalid foreleg position {servo_angle_foreleg} ({x}, {y}, {z})')
+        if isnan(servo_angle_shoulder) or servo_angle_shoulder < 0 or servo_angle_shoulder > 1: raise RuntimeError(f'Invalid shoulder position {servo_angle_shoulder} ({x}, {z})')
+        if isnan(servo_angle_thigh) or servo_angle_thigh < 0 or servo_angle_thigh > 1: raise RuntimeError(f'Invalid thigh position {servo_angle_thigh} ({x}, {z})')
+        if isnan(servo_angle_foreleg) or servo_angle_foreleg < 0 or servo_angle_foreleg > 1: raise RuntimeError(f'Invalid foreleg position {servo_angle_foreleg} ({x}, {z})')
 
         # Get the current position of the servos to move and the iteration value 
         # per interval to move within the time specified
@@ -115,7 +115,7 @@ class Leg:
         raise RuntimeError(f'Invalid position ({s0pos}, {s1pos}, {s2pos})')
         return False
 
-    def SetServoPosition(self, shoulder, upper, lower, t=0):
+    def _SetServoPosition(self, shoulder, upper, lower, t=0):
         s0pos = self.ShoulderServo.GetPosition()
         if s0pos == -1: s0pos = upper
         s1pos = self.ThighServo.GetPosition()
@@ -140,19 +140,19 @@ class Leg:
             servo.PowerDown()
 
     def Default(self):
-        self.IK(0, R_SHOULDER, -54)
+        self.IK(0, -78)
 
     def Lift(self):
-        self.IK(0, R_SHOULDER, -54, 200)
+        self.IK(20, -65, 90, 200)
 
     def Extend(self):
-        self.IK(30, R_SHOULDER, -54, 200)
+        self.IK(60, -65, 90, 200)
 
     def Lower(self):
-        self.IK(30, R_SHOULDER, -55, 200)
+        self.IK(50, -79, 90, 200)
 
     def Zero(self):
-        self.IK(0, R_SHOULDER, -55, 200)
+        self.IK(0, -79, 90, 200)
 
     def Step(self):
         self.Lift()
@@ -165,11 +165,12 @@ class FrontLeg(Leg):
 
     # Set the upper leg offset angle to 45 degrees (to compensate for diagonally positioned front leg upper servo)
     def UpperLegOffsetAngle(self):
-        return 20
+        return 30
 
     def Salute(self):
-        self.IK(40, -17, 43, 400)
-        # self.Default()
+        # self._SetServoPosition(1, 0, 0)
+        self.IK(64, 58, 10, 400)
+        self.Default()
 
 
 class RearLeg(Leg):
@@ -179,12 +180,12 @@ class RearLeg(Leg):
 
 
 class RobotServo:
-    def __init__(self, servo, min, max, direction, location):
+    def __init__(self, servo, min, max, direction, side, foreaft, limb):
         self.servo = servo
         self.min = min
         self.max = max
         self.direction = direction
-        self.Location = location
+        self.Location = side | foreaft | limb
         self.Position = -1
 
     # Sets the location of the servo from 0 to 1 (float)
@@ -238,23 +239,16 @@ class Robot:
 # - the range of motion of the servo mounted in the robot (min and max)
 # - the direction that the servo moves, left and right are opposites
 # - a bitwise anded list describing the servo and its location
-servos = [
-    # FORELEG
-    RobotServo(kit.servo[4], 0, 180, 1, LEFT | AFT | LOWER),  # LR   (fwd/back)
-    RobotServo(kit.servo[5], 0, 180, -1, RIGHT | FORE | LOWER),  # RF   (back/fwd)
-    RobotServo(kit.servo[6], 0, 170, -1, RIGHT | AFT | LOWER),  # RR   (back/fwd)
-    RobotServo(kit.servo[7], 0, 180, 1, LEFT | FORE | LOWER),  # LF   (fwd/back)
-    # THIGH
-    RobotServo(kit.servo[8], 0, 160, -1, RIGHT | AFT | UPPER),   # RR   (back/fwd)
-    RobotServo(kit.servo[9], 20, 180, -1, RIGHT | FORE | UPPER),  # RF   (back/fwd)
-    RobotServo(kit.servo[10], 20, 180, 1, LEFT | AFT | UPPER),  # LR   (fwd/back)
-    RobotServo(kit.servo[11], 0, 160, 1, LEFT | FORE | UPPER),  # LF   (fwd/back)
-    # SHOULDER
-    RobotServo(kit.servo[12], 50, 160, 1, RIGHT | AFT | SHOULDER),   # RR     (down/up)
-    RobotServo(kit.servo[13], 50, 140, -1, RIGHT | FORE | SHOULDER),  # RF     (up/down)
-    RobotServo(kit.servo[14], 15, 105, -1, LEFT | AFT | SHOULDER),  # LR     (up/down)
-    RobotServo(kit.servo[15], 45, 125, 1, LEFT | FORE | SHOULDER),   # LF     (down/up)
-]
+servos = []
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+for servo in config["servos"]:
+    side = LEFT if servo["side"] == "LEFT" else RIGHT
+    foreaft = FORE if servo["foreaft"] == "FORE" else AFT
+    limbs = {"SHOULDER": SHOULDER, "UPPER": UPPER, "LOWER": LOWER}
+    limb = limbs[servo["limb"]]
+    servos.append(RobotServo(kit.servo[servo["id"]], servo["min"], servo["max"], servo["rot"], side, foreaft, limb))
 
 robot = Robot(servos)
 
@@ -264,52 +258,62 @@ try:
 
     # # TESTING SHOULDER MOVEMENT (DEBUG)
     # for i in range(0, 11, 2):
-    #     robot.Legs["LF"].SetServoPosition(i / 10, 0.5, 0)
-    #     robot.Legs["RF"].SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["LF"]._1SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["RF"]._SetServoPosition(i / 10, 0.5, 0)
     #     time.sleep(0.5)
     # for i in range(10, -1, -2):
-    #     robot.Legs["LF"].SetServoPosition(i / 10, 0.5, 0)
-    #     robot.Legs["RF"].SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["LF"]._SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["RF"]._SetServoPosition(i / 10, 0.5, 0)
     #     time.sleep(0.5)
 
     # for i in range(0, 11, 2):
-    #     robot.Legs["LR"].SetServoPosition(i / 10, 0.5, 0)
-    #     robot.Legs["RR"].SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["LR"]._SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["RR"]._SetServoPosition(i / 10, 0.5, 0)
     #     time.sleep(0.5)
     # for i in range(10, -1, -2):
-    #     robot.Legs["LR"].SetServoPosition(i / 10, 0.5, 0)
-    #     robot.Legs["RR"].SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["LR"]._SetServoPosition(i / 10, 0.5, 0)
+    #     robot.Legs["RR"]._SetServoPosition(i / 10, 0.5, 0)
     #     time.sleep(0.5)
 
-    # # TESTNG LEG MOVEMENT LIMITS (DEBUG)
-    # robot.Legs["LF"].SetServoPosition(0, 0, 0)
+    # TESTNG UPPER LEG MOVEMENT LIMITS (DEBUG)
+    # robot.Legs["LF"]._SetServoPosition(0, 0, 0)
     # for i in range(5):
-    #     robot.Legs["RF"].SetServoPosition(1, 0.5, 0.5)
+    #     robot.Legs["RF"]._SetServoPosition(1, 0.5, 0.5)
     #     time.sleep(0.5)
-    #     robot.Legs["RF"].SetServoPosition(0, 0.5, 0.5)
+    #     robot.Legs["RF"]._SetServoPosition(0, 0.5, 0.5)
     #     time.sleep(0.5)
 
-    # for i in range(0, 11, 2):
-    #     robot.Legs["LR"].SetServoPosition(0, i/10, 0.5)
-    #     time.sleep(0.2)
-    #     robot.Legs["RR"].SetServoPosition(0, i/10, 0.5)
-    #     time.sleep(0.2)
+    # Move forelegs out of the way for rear leg test
+    robot.Legs["LF"]._SetServoPosition(0, 1, 0)
+    robot.Legs["RF"]._SetServoPosition(0, 1, 0)
+    robot.Legs["LF"]._SetServoPosition(0, 0, 1)
+    robot.Legs["RF"]._SetServoPosition(0, 0, 1)
+    robot.Legs["LF"]._SetServoPosition(0, 0, 0)
+    robot.Legs["RF"]._SetServoPosition(0, 0, 0)
+    for i in range(0, 11, 2):
+        robot.Legs["LR"]._SetServoPosition(0, i/10, 1-i/10)
+        time.sleep(0.2)
+        robot.Legs["RR"]._SetServoPosition(0, i/10, 1-i/10)
+        time.sleep(0.2)
 
-    # for i in range(0, 11, 2):
-    #     robot.Legs["LF"].SetServoPosition(0, i/10, 0.5)
-    #     time.sleep(0.2)
-    #     robot.Legs["RF"].SetServoPosition(0, i/10, 0.5)
-    #     time.sleep(0.2)
+    for i in range(0, 11, 2):
+        robot.Legs["LF"]._SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+        robot.Legs["RF"]._SetServoPosition(0, i/10, 0.5)
+        time.sleep(0.2)
+
+    # TESTNG FORELEG MOVEMENT LIMITS (DEBUG)
+
 
     # Walking
-    robot.Default()
-    # for i in range(2):
+    # robot.Default()
+    # for i in range(5):
     #     robot.Walk()
 
     # And salute
-    robot.Salute()
+    # robot.Salute()
 
-    time.sleep(.5)
+    # time.sleep(.5)
     robot.PowerDown()
 
 except Exception:
