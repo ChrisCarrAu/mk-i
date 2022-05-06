@@ -14,7 +14,7 @@ Technology & Hardware used
 
 Robot, Servo, Leg definitions are in main.py
 
-# 2-D Inverse Kinematics
+## 2-D Inverse Kinematics
 
 Inverse kinematics is used to calculate the number of degrees to rotate the leg servos in order to place the foot in a location defined by cartesian co-ordinates (x,y,z)
 
@@ -50,6 +50,20 @@ The dimensions used in this robot are as follows:
 
  Each leg has an independant position - y and z are equivant, however left legs have negative z-axis positioning whereas the right legs have positive z-axis positioning.
 
-# 3-D Inverse Kinematics
+## 3-D Inverse Kinematics
 
 This is very similar to the 2-D example above. This robot, in effect, does calculations in two 2-d planes because the shoulder is always at right angles to the leg.
+
+# Configuration tool
+
+To configure the servo ranges, you can use the configuration tool defined in config.py
+
+```
+python config.py
+```
+
+Note that this is a graphical tool - if you are using ssh to connect to the robot, you will need to use
+
+```
+ssh -X 
+```
