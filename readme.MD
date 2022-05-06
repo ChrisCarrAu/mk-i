@@ -57,6 +57,7 @@ This is very similar to the 2-D example above. This robot, in effect, does calcu
 # Configuration tool
 
 To configure the servo ranges, you can use the configuration tool defined in config.py
+Note that it expects there to be an existing config.json file - this defines the initial state of all servos
 
 ```
 python config.py
