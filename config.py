@@ -1,3 +1,4 @@
+from turtle import bgcolor
 from adafruit_servokit import ServoKit
 import json
 import tkinter as tk
@@ -35,6 +36,14 @@ def GetValue(event):
     ServoLimb.insert(0, select['limb'])
     ServoLimb.configure(state="readonly")
 
+    ServoMinMax.configure(from_ = select["min"], to = select["max"])
+
+
+def servoTest(event=None):
+    servoId = ServoId.get()
+    servoMinMax = ServoMinMax.get()
+    kit.servo[int(servoId)].angle = int(servoMinMax)
+
 
 def servoMinTest(event=None):
     servoId = ServoId.get()
@@ -66,14 +75,24 @@ def update():
         print(e)
 
 
+def poweroff():
+    servoId = ServoId.get()
+    kit.servo[int(servoId)].angle=None
+
+
+def stop():
+    for i in range(16):
+        kit.servo[i].angle=None
+
+
 def save():
     config = []
     for row_id in listBox.get_children():
         id, min, max, rot, side, foreaft, limb = listBox.item(row_id)["values"]
         config.append( { "id": id, "min": min, "max": max, "rot": rot, "side": side, "foreaft": foreaft, "limb": limb } )
 
-    with open('config2.json', 'w') as f:
-        json.dump({"servos": config}, f)
+    with open('config.json', 'w') as f:
+        json.dump({"servos": config}, f, indent=4)
 
 
 def show():
@@ -90,6 +109,7 @@ for servo in config["servos"]:
     servos.append(servo)
 
 root = Tk()
+root.title(string="Robot Servo Configuration Tool")
 root.geometry("800x500")
 
 global ServoId
@@ -100,7 +120,7 @@ global ServoSide
 global ServoForeAft
 global ServoLimb
 
-tk.Label(root, text="Servo Config", fg="red", font=(None, 30)).place(x=350, y=5)
+# tk.Label(root, text="Servo Config", fg="red", font=(None, 30)).place(x=350, y=5)
 
 tk.Label(root, text="Servo ID").place(x=10, y=10)
 Label(root, text="Min").place(x=10, y=30)
@@ -119,6 +139,9 @@ ServoMin.place(x=140, y=30)
 ServoMax = Spinbox(root, from_ = 0, to = 180, command=servoMaxTest)
 ServoMax.place(x=140, y=50)
 
+ServoMinMax = Scale(root, from_ = 0, to = 180, orient=HORIZONTAL, command=servoTest, length=300)
+ServoMinMax.place(x=360, y=30)
+
 ServoRot = Entry(root, state="readonly")
 ServoRot.place(x=140, y=70)
 
@@ -132,6 +155,8 @@ ServoLimb = Entry(root, state="readonly")
 ServoLimb.place(x=140, y=130)
 
 Button(root, text="update", command=update, height=1, width=13).place(x=140, y=170)
+Button(root, text="power off", command=poweroff, height=1, width=13, bg='orange').place(x=340, y=170)
+Button(root, text="STOP ALL POWER", command=stop, height=1, width=13, bg='red', fg='white').place(x=540, y=170)
 
 cols = ('id', 'min', 'max', 'rot', 'side', 'foreaft', 'limb')
 listBox = ttk.Treeview(root, columns=cols, show='headings')
@@ -146,5 +171,6 @@ Button(root, text="Save", command=save, height=1, width=13).place(x=140, y=460)
 
 show()
 listBox.bind('<Double-Button-1>', GetValue)
+listBox.bind('<<TreeviewSelect>>', GetValue)
 
 root.mainloop()
