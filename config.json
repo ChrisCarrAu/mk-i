@@ -2,7 +2,7 @@
     "servos": [
         {
             "id": 4,
-            "min": 22,
+            "min": 28,
             "max": 180,
             "rot": 1,
             "side": "LEFT",
@@ -83,7 +83,7 @@
         },
         {
             "id": 13,
-            "min": 61,
+            "min": 63,
             "max": 143,
             "rot": -1,
             "side": "RIGHT",

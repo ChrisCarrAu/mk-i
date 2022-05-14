@@ -4,173 +4,209 @@ import json
 import tkinter as tk
 from tkinter import ttk, messagebox, Spinbox
 from tkinter import *
-
-def GetValue(event):
-    ServoId.configure(state="normal")
-    ServoRot.configure(state="normal")
-    ServoSide.configure(state="normal")
-    ServoForeAft.configure(state="normal")
-    ServoLimb.configure(state="normal")
-
-    ServoId.delete(0, END)
-    ServoMin.delete(0, END)
-    ServoMax.delete(0, END)
-    ServoRot.delete(0, END)
-    ServoSide.delete(0, END)
-    ServoForeAft.delete(0, END)
-    ServoLimb.delete(0, END)
-    row_id = listBox.selection()[0]
-    select = listBox.set(row_id)
-    ServoId.insert(0, select['id'])
-    ServoId.configure(state="readonly")
-
-    ServoMin.insert(0, select['min'])
-    ServoMax.insert(0, select['max'])
-
-    ServoRot.insert(0, select['rot'])
-    ServoRot.configure(state="readonly")
-    ServoSide.insert(0, select['side'])
-    ServoSide.configure(state="readonly")
-    ServoForeAft.insert(0, select['foreaft'])
-    ServoForeAft.configure(state="readonly")
-    ServoLimb.insert(0, select['limb'])
-    ServoLimb.configure(state="readonly")
-
-    ServoMinMax.configure(from_ = select["min"], to = select["max"])
+from robot import *
 
 
-def servoTest(event=None):
-    servoId = ServoId.get()
-    servoMinMax = ServoMinMax.get()
-    kit.servo[int(servoId)].angle = int(servoMinMax)
+class TestConfig(Toplevel):
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.robot = Robot()
+
+        self.geometry("640x480")
+        self.title("Test Configuration")
+
+        self.leglist = Listbox(self)
+        self.leglist.place(x=10, y=30, height=80)
+        self.leglist.insert(1, "LF")
+        self.leglist.insert(2, "RF")
+        self.leglist.insert(3, "LR")
+        self.leglist.insert(4, "RR")
+        
+        self.xpos = Scale(self, from_ = -90, to = 90, orient=HORIZONTAL, command=self.legTest)
+        self.xpos.place(x=60, y=230)
+        self.ypos = Scale(self, from_ = 0, to = -90, command=self.legTest)
+        self.ypos.place(x=160, y=230)
 
 
-def servoMinTest(event=None):
-    servoId = ServoId.get()
-    servoMin = ServoMin.get()
-    kit.servo[int(servoId)].angle = int(servoMin)
+    def legTest(self, event=None):
+        selectedLeg = self.leglist.get(self.leglist.curselection())
+        xpos = self.xpos.get()
+        ypos = self.ypos.get()
+
+        print(F'> moving {selectedLeg} to ({xpos}, {ypos})')
+        
+        leg = self.robot.Legs[selectedLeg]
+        leg.IK(xpos, ypos)
 
 
-def servoMaxTest(event=None):
-    servoId = ServoId.get()
-    servoMax = ServoMax.get()
-    kit.servo[int(servoId)].angle = int(servoMax)
+class App(Tk):
+    def __init__(self):
+        super().__init__()
+
+        self.title(string="Robot Servo Configuration Tool")
+        self.geometry("800x500")
+
+        tk.Label(self, text="Servo ID").place(x=10, y=10)
+        Label(self, text="Min").place(x=10, y=30)
+        Label(self, text="Max").place(x=10, y=50)
+        Label(self, text="Rot").place(x=10, y=70)
+        Label(self, text="Side").place(x=10, y=90)
+        Label(self, text="Fore/Aft").place(x=10, y=110)
+        Label(self, text="Limb").place(x=10, y=130)
+
+        self.ServoId = Entry(self, state="readonly")
+        self.ServoId.place(x=140, y=10)
+
+        self.ServoMin = Spinbox(self, from_ = 0, to = 180, command=self.servoMinTest)
+        self.ServoMin.place(x=140, y=30)
+
+        self.ServoMax = Spinbox(self, from_ = 0, to = 180, command=self.servoMaxTest)
+        self.ServoMax.place(x=140, y=50)
+
+        self.ServoMinMax = Scale(self, from_ = 0, to = 180, orient=HORIZONTAL, command=self.servoTest, length=300)
+        self.ServoMinMax.place(x=360, y=30)
+
+        self.ServoRot = Entry(self, state="readonly")
+        self.ServoRot.place(x=140, y=70)
+
+        self.ServoSide = Entry(self, state="readonly")
+        self.ServoSide.place(x=140, y=90)
+
+        self.ServoForeAft = Entry(self, state="readonly")
+        self.ServoForeAft.place(x=140, y=110)
+
+        self.ServoLimb = Entry(self, state="readonly")
+        self.ServoLimb.place(x=140, y=130)
+
+        Button(self, text="Update", command=self.update, height=1, width=13).place(x=40, y=170)
+        Button(self, text="TEST", command=self.test_config, height=1, width=13).place(x=190, y=170)
+        Button(self, text="power off", command=self.poweroff, height=1, width=13, bg='orange').place(x=340, y=170)
+        Button(self, text="STOP ALL POWER", command=self.stop, height=1, width=13, bg='red', fg='white').place(x=490, y=170)
+
+        cols = ('id', 'min', 'max', 'rot', 'side', 'foreaft', 'limb')
+        self.listBox = ttk.Treeview(self, columns=cols, show='headings')
+
+        for col in cols:
+            self.listBox.heading(col, text=col, anchor=tk.CENTER)
+            self.listBox.column(col, stretch=tk.YES, minwidth=50, width=100)
+            self.listBox.grid(row=1, column=0, columnspan=1)
+            self.listBox.place(x=10, y=230)
+
+        Button(self, text="Save", command=self.save, height=1, width=13).place(x=140, y=460)
+
+        self.show()
+        self.listBox.bind('<Double-Button-1>', self.GetValue)
+        self.listBox.bind('<<TreeviewSelect>>', self.GetValue)
 
 
-def update():
-    servoId = ServoId.get()
-    servoMin = ServoMin.get()
-    servoMax = ServoMax.get()
-    servoRot = ServoRot.get()
-    servoSide = ServoSide.get()
-    servoForeAft = ServoForeAft.get()
-    servoLimb = ServoLimb.get()
+    def GetValue(self, event):
+        self.ServoId.configure(state="normal")
+        self.ServoRot.configure(state="normal")
+        self.ServoSide.configure(state="normal")
+        self.ServoForeAft.configure(state="normal")
+        self.ServoLimb.configure(state="normal")
 
-    try:
-        selected_item = listBox.selection()[0]
-        listBox.item(selected_item, values=(servoId, servoMin, servoMax, servoRot, servoSide, servoForeAft, servoLimb))
-        ServoId.focus_set()
+        self.ServoId.delete(0, END)
+        self.ServoMin.delete(0, END)
+        self.ServoMax.delete(0, END)
+        self.ServoRot.delete(0, END)
+        self.ServoSide.delete(0, END)
+        self.ServoForeAft.delete(0, END)
+        self.ServoLimb.delete(0, END)
+        row_id = self.listBox.selection()[0]
+        select = self.listBox.set(row_id)
+        self.ServoId.insert(0, select['id'])
+        self.ServoId.configure(state="readonly")
 
-    except Exception as e:
-        print(e)
+        self.ServoMin.insert(0, select['min'])
+        self.ServoMax.insert(0, select['max'])
 
+        self.ServoRot.insert(0, select['rot'])
+        self.ServoRot.configure(state="readonly")
+        self.ServoSide.insert(0, select['side'])
+        self.ServoSide.configure(state="readonly")
+        self.ServoForeAft.insert(0, select['foreaft'])
+        self.ServoForeAft.configure(state="readonly")
+        self.ServoLimb.insert(0, select['limb'])
+        self.ServoLimb.configure(state="readonly")
 
-def poweroff():
-    servoId = ServoId.get()
-    kit.servo[int(servoId)].angle=None
-
-
-def stop():
-    for i in range(16):
-        kit.servo[i].angle=None
-
-
-def save():
-    config = []
-    for row_id in listBox.get_children():
-        id, min, max, rot, side, foreaft, limb = listBox.item(row_id)["values"]
-        config.append( { "id": id, "min": min, "max": max, "rot": rot, "side": side, "foreaft": foreaft, "limb": limb } )
-
-    with open('config.json', 'w') as f:
-        json.dump({"servos": config}, f, indent=4)
+        self.ServoMinMax.configure(from_ = select["min"], to = select["max"])
 
 
-def show():
-    for i, value in enumerate(servos, start=1):
-        listBox.insert("", "end", values=(value["id"], value["min"], value["max"], value["rot"], value["side"], value["foreaft"], value["limb"]))
+    def servoTest(self, event=None):
+        servoId = self.ServoId.get()
+        servoMinMax = self.ServoMinMax.get()
+        kit.servo[int(servoId)].angle = int(servoMinMax)
 
-kit = ServoKit(channels=16)
 
-servos = []
-with open('config.json', 'r') as f:
-    config = json.load(f)
+    def servoMinTest(self, event=None):
+        servoId = self.ServoId.get()
+        servoMin = self.ServoMin.get()
+        kit.servo[int(servoId)].angle = int(servoMin)
 
-for servo in config["servos"]:
-    servos.append(servo)
 
-root = Tk()
-root.title(string="Robot Servo Configuration Tool")
-root.geometry("800x500")
+    def servoMaxTest(self, event=None):
+        servoId = self.ServoId.get()
+        servoMax = self.ServoMax.get()
+        kit.servo[int(servoId)].angle = int(servoMax)
 
-global ServoId
-global ServoMin
-global ServoMax
-global ServoRot
-global ServoSide
-global ServoForeAft
-global ServoLimb
 
-# tk.Label(root, text="Servo Config", fg="red", font=(None, 30)).place(x=350, y=5)
+    def test_config(self, event=None):
+        testconfig = TestConfig(self)
+        testconfig.mainloop()
 
-tk.Label(root, text="Servo ID").place(x=10, y=10)
-Label(root, text="Min").place(x=10, y=30)
-Label(root, text="Max").place(x=10, y=50)
-Label(root, text="Rot").place(x=10, y=70)
-Label(root, text="Side").place(x=10, y=90)
-Label(root, text="Fore/Aft").place(x=10, y=110)
-Label(root, text="Limb").place(x=10, y=130)
 
-ServoId = Entry(root, state="readonly")
-ServoId.place(x=140, y=10)
+    def update(self):
+        servoId = self.ServoId.get()
+        servoMin = self.ServoMin.get()
+        servoMax = self.ServoMax.get()
+        servoRot = self.ServoRot.get()
+        servoSide = self.ServoSide.get()
+        servoForeAft = self.ServoForeAft.get()
+        servoLimb = self.ServoLimb.get()
 
-ServoMin = Spinbox(root, from_ = 0, to = 180, command=servoMinTest)
-ServoMin.place(x=140, y=30)
+        try:
+            selected_item = self.listBox.selection()[0]
+            self.listBox.item(selected_item, values=(servoId, servoMin, servoMax, servoRot, servoSide, servoForeAft, servoLimb))
+            self.ServoId.focus_set()
 
-ServoMax = Spinbox(root, from_ = 0, to = 180, command=servoMaxTest)
-ServoMax.place(x=140, y=50)
+        except Exception as e:
+            print(e)
 
-ServoMinMax = Scale(root, from_ = 0, to = 180, orient=HORIZONTAL, command=servoTest, length=300)
-ServoMinMax.place(x=360, y=30)
 
-ServoRot = Entry(root, state="readonly")
-ServoRot.place(x=140, y=70)
+    def poweroff(self):
+        servoId = self.ServoId.get()
+        kit.servo[int(servoId)].angle=None
 
-ServoSide = Entry(root, state="readonly")
-ServoSide.place(x=140, y=90)
 
-ServoForeAft = Entry(root, state="readonly")
-ServoForeAft.place(x=140, y=110)
+    def stop():
+        for i in range(16):
+            kit.servo[i].angle=None
 
-ServoLimb = Entry(root, state="readonly")
-ServoLimb.place(x=140, y=130)
 
-Button(root, text="update", command=update, height=1, width=13).place(x=140, y=170)
-Button(root, text="power off", command=poweroff, height=1, width=13, bg='orange').place(x=340, y=170)
-Button(root, text="STOP ALL POWER", command=stop, height=1, width=13, bg='red', fg='white').place(x=540, y=170)
+    def save(self):
+        config = []
+        for row_id in self.listBox.get_children():
+            id, min, max, rot, side, foreaft, limb = self.listBox.item(row_id)["values"]
+            config.append( { "id": id, "min": min, "max": max, "rot": rot, "side": side, "foreaft": foreaft, "limb": limb } )
 
-cols = ('id', 'min', 'max', 'rot', 'side', 'foreaft', 'limb')
-listBox = ttk.Treeview(root, columns=cols, show='headings')
+        with open('config.json', 'w') as f:
+            json.dump({"servos": config}, f, indent=4)
 
-for col in cols:
-    listBox.heading(col, text=col, anchor=tk.CENTER)
-    listBox.column(col, stretch=tk.YES, minwidth=50, width=100)
-    listBox.grid(row=1, column=0, columnspan=1)
-    listBox.place(x=10, y=230)
 
-Button(root, text="Save", command=save, height=1, width=13).place(x=140, y=460)
+    def show(self):
+        with open('config.json', 'r') as f:
+            config = json.load(f)
 
-show()
-listBox.bind('<Double-Button-1>', GetValue)
-listBox.bind('<<TreeviewSelect>>', GetValue)
+        servos = []
+        for servo in config["servos"]:
+            servos.append(servo)
 
-root.mainloop()
+        for _, value in enumerate(servos, start=1):
+            self.listBox.insert("", "end", values=(value["id"], value["min"], value["max"], value["rot"], value["side"], value["foreaft"], value["limb"]))
+
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
