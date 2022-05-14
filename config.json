@@ -2,7 +2,7 @@
     "servos": [
         {
             "id": 4,
-            "min": 28,
+            "min": 23,
             "max": 180,
             "rot": 1,
             "side": "LEFT",
@@ -12,7 +12,7 @@
         {
             "id": 5,
             "min": 0,
-            "max": 170,
+            "max": 172,
             "rot": -1,
             "side": "RIGHT",
             "foreaft": "FORE",
@@ -21,7 +21,7 @@
         {
             "id": 6,
             "min": 0,
-            "max": 170,
+            "max": 171,
             "rot": -1,
             "side": "RIGHT",
             "foreaft": "AFT",
@@ -39,7 +39,7 @@
         {
             "id": 8,
             "min": 0,
-            "max": 180,
+            "max": 178,
             "rot": -1,
             "side": "RIGHT",
             "foreaft": "AFT",
@@ -74,7 +74,7 @@
         },
         {
             "id": 12,
-            "min": 44,
+            "min": 45,
             "max": 156,
             "rot": 1,
             "side": "RIGHT",
@@ -83,8 +83,8 @@
         },
         {
             "id": 13,
-            "min": 63,
-            "max": 143,
+            "min": 65,
+            "max": 138,
             "rot": -1,
             "side": "RIGHT",
             "foreaft": "FORE",
@@ -92,7 +92,7 @@
         },
         {
             "id": 14,
-            "min": 32,
+            "min": 35,
             "max": 103,
             "rot": -1,
             "side": "LEFT",
@@ -101,7 +101,7 @@
         },
         {
             "id": 15,
-            "min": 37,
+            "min": 38,
             "max": 126,
             "rot": 1,
             "side": "LEFT",
