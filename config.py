@@ -25,7 +25,7 @@ class TestConfig(Toplevel):
         
         self.xpos = Scale(self, from_ = -90, to = 90, orient=HORIZONTAL, command=self.legTest)
         self.xpos.place(x=60, y=230)
-        self.ypos = Scale(self, from_ = 0, to = -90, command=self.legTest)
+        self.ypos = Scale(self, from_ = 30, to = -90, command=self.legTest)
         self.ypos.place(x=160, y=230)
 
 
@@ -177,10 +177,11 @@ class App(Tk):
 
     def poweroff(self):
         servoId = self.ServoId.get()
+        print(F'> powering off servo {servoId}')
         kit.servo[int(servoId)].angle=None
 
 
-    def stop():
+    def stop(self):
         for i in range(16):
             kit.servo[i].angle=None
 
