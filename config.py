@@ -25,7 +25,7 @@ class TestConfig(Toplevel):
         
         self.xpos = Scale(self, from_ = -90, to = 90, orient=HORIZONTAL, command=self.legTest)
         self.xpos.place(x=60, y=230)
-        self.ypos = Scale(self, from_ = 30, to = -90, command=self.legTest)
+        self.ypos = Scale(self, from_ = 90, to = -90, command=self.legTest)
         self.ypos.place(x=160, y=230)
 
 
@@ -45,7 +45,7 @@ class App(Tk):
         super().__init__()
 
         self.title(string="Robot Servo Configuration Tool")
-        self.geometry("800x500")
+        self.geometry("800x550")
 
         tk.Label(self, text="Servo ID").place(x=10, y=10)
         Label(self, text="Min").place(x=10, y=30)
@@ -85,7 +85,7 @@ class App(Tk):
         Button(self, text="STOP ALL POWER", command=self.stop, height=1, width=13, bg='red', fg='white').place(x=490, y=170)
 
         cols = ('id', 'min', 'max', 'rot', 'side', 'foreaft', 'limb')
-        self.listBox = ttk.Treeview(self, columns=cols, show='headings')
+        self.listBox = ttk.Treeview(self, columns=cols, show='headings', height=12)
 
         for col in cols:
             self.listBox.heading(col, text=col, anchor=tk.CENTER)
@@ -93,7 +93,7 @@ class App(Tk):
             self.listBox.grid(row=1, column=0, columnspan=1)
             self.listBox.place(x=10, y=230)
 
-        Button(self, text="Save", command=self.save, height=1, width=13).place(x=140, y=460)
+        Button(self, text="Save", command=self.save, height=1, width=13).place(x=140, y=500)
 
         self.show()
         self.listBox.bind('<Double-Button-1>', self.GetValue)

@@ -1,6 +1,6 @@
 import json
 import time
-import traceback
+import threading
 from adafruit_servokit import ServoKit
 from math import isnan
 from numpy import sqrt, arccos, arcsin, arctan, arctan2, rad2deg
@@ -245,7 +245,20 @@ class Robot:
         self.Legs["RF"].Salute()
 
     def Walk(self):
-        self.Legs["RF"].Step()
-        self.Legs["LR"].Step()
-        self.Legs["LF"].Step()
-        self.Legs["RR"].Step()
+        # Kick off Right Front, Left Rear legs in parallel
+        t1 = threading.Thread(target=self.Legs["RF"].Step)
+        t2 = threading.Thread(target=self.Legs["LR"].Step)
+        t1.start()
+        t2.start()
+        # Wait for the leg movement to complete
+        t1.join()
+        t2.join()
+
+        # Kick off Left Front, Right Rear legs in parallel
+        t1 = threading.Thread(target=self.Legs["LF"].Step)
+        t2 = threading.Thread(target=self.Legs["RR"].Step)
+        t1.start()
+        t2.start()
+        # Wait for the leg movement to complete
+        t1.join()
+        t2.join()
