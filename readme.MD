@@ -68,3 +68,10 @@ Note that this is a graphical tool - if you are using ssh to connect to the robo
 ```
 ssh -X 
 ```
+If you are connecting from a Windows machine, you should use PuTTY with the following settings:
+Under Connection | SSH | X11
+- Check Enable X11 forwarding
+- X display location should be set to :0.0
+- MIT-Magic-Cookie-1
+- X-authority file for local display should be set to Xming.exe (this must be installed separately - ensure that it is permitted access through the firewall)
+
